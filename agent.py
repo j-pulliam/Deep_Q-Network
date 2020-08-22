@@ -1,106 +1,30 @@
-#!/usr/bin/env python
-import keras, tensorflow as tf, numpy as np, gym, sys, copy, argparse
-import collections
-import random
-import matplotlib.pyplot as plt
+#Developer: Dillon Pulliam
+#Date: 8/21/2020
+#Purpose: The purpose of this file is specify the DQN Agent
+
+
+#Imports needed
 import os
 import time
-
-class QNetwork():
-
-	# This class essentially defines the network architecture.
-	# The network should take in state of the world as an input,
-	# and output Q values of the actions available to the agent as the output.
-
-	def __init__(self, environment_name, lr):
-		# Define your network architecture here. It is also a good idea to define any training operations
-		# and optimizers here, initialize your variables, or alternately compile your model here.
-		self.model = None
-		#Model for the Mountain Car Environment
-		if(environment_name == 'MountainCar-v0'):
-			self.model = keras.models.Sequential()
-			self.model.add(keras.layers.Dense(64, activation='relu', input_shape=(2,)))
-			self.model.add(keras.layers.Dense(64, activation='relu'))
-			self.model.add(keras.layers.Dense(64, activation='relu'))
-			self.model.add(keras.layers.Dense(3, activation='linear'))
-			adam = keras.optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, amsgrad=False)
-			self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
-		#Model for the CartPole Environment
-		else:
-			#Currenly running all relu with first layer being 48 units and softmax for last layer
-			self.model = keras.models.Sequential()
-			self.model.add(keras.layers.Dense(24, activation='tanh', input_shape=(4,)))
-			self.model.add(keras.layers.Dense(24, activation='tanh'))
-			self.model.add(keras.layers.Dense(2, activation='linear'))
-			adam = keras.optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, amsgrad=False)
-			self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
-
-	def save_model_weights(self, suffix):
-		# Helper function to save your model / weights.
-		self.model.save('model.h5')
-		self.model.save_weights('model_weights.h5')
-		return
-
-	def load_model(self, model_file):
-		# Helper function to load an existing model.
-		# e.g.: torch.save(self.model.state_dict(), model_file)
-		self.model = keras.models.load_model('model.h5')
-		#self.model = keras.models.load_model(model_file)
-		return
-
-	def load_model_weights(self,weight_file):
-		# Helper funciton to load model weights.
-		# e.g.: self.model.load_state_dict(torch.load(model_file))
-		self.model.load_weights('model_weights.h5')
-		#self.model.load_weights(weight_file)
-		return
+import copy
+import gym
+import numpy as np
+import matplotlib.pyplot as plt
 
 
-class Replay_Memory():
-
-	def __init__(self, memory_size=50000, burn_in=10000):
-
-		# The memory essentially stores transitions recorder from the agent
-		# taking actions in the environment.
-
-		# Burn in episodes define the number of episodes that are written into the memory from the
-		# randomly initialized agent. Memory size is the maximum size after which old elements in the memory are replaced.
-		# A simple (if not the most efficient) was to implement the memory is as a list of transitions.
-
-		# Hint: you might find this useful:
-		# 		collections.deque(maxlen=memory_size)
-		self.replay_memory = collections.deque(maxlen=memory_size)
-		self.burn_in = burn_in
-
-	def sample_batch(self, batch_size=32):
-		# This function returns a batch of randomly sampled transitions - i.e. state, action, reward, next state, terminal flag tuples.
-		# You will feed this to your model to train.
-		r_batch = random.sample(self.replay_memory, batch_size)
-		return np.array(r_batch)
-
-	def append(self, transition):
-		# Appends transition to the memory.
-		self.replay_memory.append(transition)
-		return
+#Local imports
+from replay_memory import *
+from q_network import *
 
 
+#DQN Agent class definition
 class DQN_Agent():
-
-	# In this class, we will implement functions to do the following.
-	# (1) Create an instance of the Q Network class.
-	# (2) Create a function that constructs a policy from the Q values predicted by the Q Network.
-	#		(a) Epsilon Greedy Policy.
-	# 		(b) Greedy Policy.
-	# (3) Create a function to train the Q Network, by interacting with the environment.
-	# (4) Create a function to test the Q Network's performance on the environment.
-	# (5) Create a function for Experience Replay.
-
+	#Name:          __init__
+	#Purpose:       define the DQN agent
+	#Inputs:        environment_name -> name of the environment the model will be used in
+	#               render -> whether to render the environment
+	#Output:        none -> just defines the DQN agent
 	def __init__(self, environment_name, render=False):
-
-		# Create an instance of the network itself, as well as the memory.
-		# Here is also a good place to set environmental parameters,
-		# as well as training parameters - number of episodes / iterations, etc.
-
 		#Create the environment
 		self.environment_name = environment_name
 		self.env = gym.make(self.environment_name)
@@ -153,9 +77,14 @@ class DQN_Agent():
 		self.best_td_error = None
 		if(self.environment_name == "MountainCar-v0"):
 			self.best_reward = -1000
+		return
 
+	#Name:          epsilon_greedy_policy
+	#Purpose:       sample random actions in an epsilon greedy fashion for training (exploration vs exploitation)
+	#Inputs:        q_values -> q-values output from the deep q-network
+	#Output:        actions -> actions based on epsilon greedy sampling
 	def epsilon_greedy_policy(self, q_values):
-		#Determine the number of actions to get and compute random actions and our greedy actions
+		#Determine the number of actions to get and compute random actions and greedy actions
 		batch_size = len(q_values)
 		random_action = np.random.randint(0, len(q_values[0]), size=batch_size)
 		greedy_action = np.argmax(q_values, axis=1)
@@ -170,20 +99,20 @@ class DQN_Agent():
 				actions[i] = random_action[i]
 		return actions
 
+	#Name:          greedy_policy
+	#Purpose:       sample random actions in a greedy fashion for testing
+	#Inputs:        q_values -> q-values output from the deep q-network
+	#Output:        actions -> actions based on greedy sampling
 	def greedy_policy(self, q_values):
-		# Creating greedy policy for test time.
-		action = np.argmax(q_values, axis=1)
-		return action
+		actions = np.argmax(q_values, axis=1)
+		return actions
 
+	#Name:          train
+	#Purpose:       train the DQN agent in the environment
+	#Inputs:        none
+	#Output:        none
 	def train(self):
-		# In this function, we will train our network.
-		# If training without experience replay_memory, then you will interact with the environment
-		# in this function, while also updating your network parameters.
-
-		# When use replay memory, you should interact with environment here, and store these
-		# transitions to memory, while also updating your model.
-
-		#First we need to execute the 'burn in' to fill the memory buffer
+		#Execute burn-in to fill the memory buffer
 		start_time = time.time()
 		self.burn_in_memory()
 
@@ -199,14 +128,16 @@ class DQN_Agent():
 		average_rewards = np.zeros((int(self.episodes/self.train_episodes_per_test)+1,2), dtype=float)
 		average_td_error = np.zeros((int(self.episodes/self.train_episodes_per_test)+1,2), dtype=float)
 
+		#Loop through all episodes training the agent
 		for i in range(self.episodes):
+			#Reset the environment state, set done to false, and while not done take actions in the environment
 			state = self.env.reset()
 			done = False
 			while(done == False):
-				#Get the q-values using our policy and get an action
+				#Get the q-values using our policy, get an action using epsilon greedy, and take the action
+				#to move to a next state, get a reward, and determine if the environment has terminated
 				q_values = self.DQN_Model.model.predict(np.array([state]), batch_size=1)
 				action = self.epsilon_greedy_policy(q_values)
-				#Take our action to move to a next state, get a reward, and determine if our environment has terminated
 				next_state, reward, done, _ = self.env.step(action[0])
 				#Set the termination variable as it will be helpful for calculating y_j
 				if(done == False):
@@ -243,7 +174,7 @@ class DQN_Agent():
 			if(i % self.train_episodes_per_test == 0):
 				print("Episode: ", i)
 				test_reward, td_error = self.test()
-				#Store the specific episode we are testing on and the test reward itself and TD error
+				#Store the specific episode we are testing on, the test reward itself, and the TD error
 				average_rewards[int(i/self.train_episodes_per_test),0] = i
 				average_td_error[int(i/self.train_episodes_per_test),0] = i
 				average_rewards[int(i/self.train_episodes_per_test),1] = test_reward
@@ -260,21 +191,23 @@ class DQN_Agent():
 		self.plot_graphics(average_rewards, average_td_error)
 		return
 
-	# Note: if you have problems creating video captures on servers without GUI,
-	#       you could save and relaod model to create videos on your laptop.
+	#Name:          test_video
+	#Purpose:       save videos of the agent acting in the environment
+	#Inputs:        epi -> episode number on
+	#Output:        none -> just saves a video of the agent acting in the environment
 	def test_video(self, epi):
-		# Usage:
-		# 	you can pass the arguments within agent.train() as:
-		# 		if episode % int(self.num_episodes/3) == 0:
-		#       	test_video(self, self.environment_name, episode)
+		#Create a new environment and a save path
 		new_environment = gym.make(self.environment_name)
 		save_path = "./videos-%s-%s" % (self.environment_name, epi)
 		if not os.path.exists(save_path):
 			os.mkdir(save_path)
-		# To create video
+
+		#Create a video of the agent acting in the environment
 		env = gym.wrappers.Monitor(new_environment, save_path, force=True)
 		reward_total = []
 		state = new_environment.reset()
+
+		#Act in the environment until a terminal state is reached
 		done = False
 		while not done:
 			new_environment.render()
@@ -283,10 +216,15 @@ class DQN_Agent():
 			next_state, reward, done, info = new_environment.step(action[0])
 			state = next_state
 			reward_total.append(reward)
-		#print("reward_total: {}".format(np.sum(reward_total)))
 		env.close()
 		new_environment.close()
+		return
 
+	#Name:          plot_graphics
+	#Purpose:       plot the results of training the DQN agent in the environment
+	#Inputs:        average_rewards -> test rewards of the agent throughout training
+	#				average_td_error -> td-error of the agent throughout training
+	#Output:        none -> just plots the training results
 	def plot_graphics(self, average_rewards, average_td_error):
 		#Here we plot the average cumulative test reward over training episodes collected
 		#at specific intervals during training
@@ -306,10 +244,12 @@ class DQN_Agent():
 		plt.show()
 		return
 
-	def test(self, model_file=None):
-		# Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
-		# Here you need to interact with the environment, irrespective of whether you are using a memory.
-
+	#Name:          test
+	#Purpose:       test the DQN agent in the environment
+	#Inputs:        none
+	#Outputs:        average_reward -> average cumulative test reward of the DQN agent
+	#				average_td_error -> average td-error of the DQN agent
+	def test(self):
 		#Variables to store the outputs of policy progression through the environment
 		state = None
 		action = None
@@ -318,21 +258,21 @@ class DQN_Agent():
 		done = None
 		not_termination = None
 
-		#Numpy array to store rewards over testing per episode
+		#Numpy array to store rewards over testing per episode, variables to hold the td-error sum and total step counter
 		all_rewards = np.zeros(self.test_episodes, dtype=int)
-
-		#Holds the TD Error sum and a counter for total steps
 		steps = 0
 		td_error_sum = 0
 
+		#Loop through all test episodes evaluating performance
 		for i in range(self.test_episodes):
+			#Reset the state, set done to false, and act in the environment
 			state = self.env.reset()
 			done = False
 			while(done == False):
-				#Get the q-values using our policy and get an action
+				#Get the q-values using our policy, get an action using greedy, and take the action moving to a next state, getting a reward,
+				#and determining if the environment has terminated
 				q_values = self.DQN_Model.model.predict(np.array([state]), batch_size=1)
 				action = self.greedy_policy(q_values)
-				#Take our action to move to a next state, get a reward, and determine if our environment has terminated
 				next_state, reward, done, _ = self.env.step(action[0])
 				#Add the current reward to the data structure storing the rewards
 				all_rewards[i] += reward
@@ -346,9 +286,8 @@ class DQN_Agent():
 
 		#To prevent the over-fitting problem of the MountainCar Environment
 		if(self.environment_name == "MountainCar-v0"):
-			#Only save the model if it performs better
-			#If the model fails to perform better re-load the best model, half
-			#the learning rate, and re-compile the model
+			#Only save the model if it performs better; if the model fails to perform better re-load the best model, half the learning rate,
+			#and re-compile the model
 			if(average_reward >= self.best_reward):
 				self.DQN_Best = copy.deepcopy(self.DQN_Model)
 				self.best_reward = average_reward
@@ -359,21 +298,15 @@ class DQN_Agent():
 				adam = keras.optimizers.Adam(lr=self.learning_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
 				self.DQN_Model.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
 
-				#EVALUATE THE MODEL AGAIN TO GET A TRUE REWARD SCORE VERSUS KEEPING IT THE SAME ALWAYS
-				#DEALS WITH STOCHASTICITY IN ENVIRONMENT
-				#Variables to store the outputs of policy progression through the environment
-				state = None
-				action = None
-				reward = None
-				next_state = None
-				done = None
-				not_termination = None
-				#Numpy array to store rewards over testing per episode
+				#Evaluate the model again to get a true reward score versus keeping it the same; deals with environment stochasticity
+				#Reset the all_rewards, steps, and td_error_sum variables
 				all_rewards = np.zeros(self.test_episodes, dtype=int)
-				#Holds the TD Error sum and a counter for total steps
 				steps = 0
 				td_error_sum = 0
+
+				#Loop through all test episodes evaluating performance
 				for i in range(self.test_episodes):
+					#Reset the state, set done to false, and act in the environment
 					state = self.env.reset()
 					done = False
 					while(done == False):
@@ -405,9 +338,11 @@ class DQN_Agent():
 			return average_reward, td_error_sum/steps
 
 
-
+	#Name:          burn_in_memory
+	#Purpose:       burn in the replay memory by iterating through a certain number of episodes / transitions
+	#Inputs:        none
+	#Output:        none -> just performs burn in
 	def burn_in_memory(self):
-		# Initialize your replay memory with a burn_in number of episodes / transitions.
 		#Variables to store the outputs of policy progression through the environment
 		state = None
 		action = None
@@ -440,33 +375,3 @@ class DQN_Agent():
 			#Set the current state to the next state from taking the action for the next loop
 			state = next_state
 		return
-
-
-
-def parse_arguments():
-	parser = argparse.ArgumentParser(description='Deep Q Network Argument Parser')
-	parser.add_argument('--env',dest='env',type=str, help='Either CartPole-v0 or MountainCar-v0')
-	parser.add_argument('--render',dest='render',type=int,default=0)
-	parser.add_argument('--train',dest='train',type=int,default=1)
-	parser.add_argument('--model',dest='model_file',type=str)
-	return parser.parse_args()
-
-def main(args):
-
-	args = parse_arguments()
-	environment_name = args.env
-
-	# Setting the session to allow growth, so it doesn't allocate all GPU memory.
-	gpu_ops = tf.GPUOptions(allow_growth=True)
-	config = tf.ConfigProto(gpu_options=gpu_ops)
-	sess = tf.Session(config=config)
-
-	# Setting this as the default tensorflow session.
-	keras.backend.tensorflow_backend.set_session(sess)
-
-	Agent = DQN_Agent(args.env)
-	Agent.train()
-
-
-if __name__ == '__main__':
-	main(sys.argv)
