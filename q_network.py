@@ -23,16 +23,14 @@ class QNetwork():
 			self.model.add(keras.layers.Dense(64, activation='relu'))
 			self.model.add(keras.layers.Dense(64, activation='relu'))
 			self.model.add(keras.layers.Dense(3, activation='linear'))
-			adam = keras.optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, amsgrad=False)
-			self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
 		#Model for the CartPole Environment
 		else:
 			self.model = keras.models.Sequential()
 			self.model.add(keras.layers.Dense(24, activation='tanh', input_shape=(4,)))
 			self.model.add(keras.layers.Dense(24, activation='tanh'))
 			self.model.add(keras.layers.Dense(2, activation='linear'))
-			adam = keras.optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, amsgrad=False)
-			self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
+		adam = keras.optimizers.Adam(lr=lr, beta_1=0.9, beta_2=0.999, amsgrad=False)
+		self.model.compile(loss='mean_squared_error', optimizer=adam, metrics=['accuracy'])
 		return
 
 	#Name:          save_model_weights

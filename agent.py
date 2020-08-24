@@ -22,38 +22,28 @@ class DQN_Agent():
 	#Name:          __init__
 	#Purpose:       define the DQN agent
 	#Inputs:        environment_name -> name of the environment the model will be used in
-	#               render -> whether to render the environment
 	#Output:        none -> just defines the DQN agent
-	def __init__(self, environment_name, render=False):
+	def __init__(self, environment_name):
 		#Create the environment
 		self.environment_name = environment_name
 		self.env = gym.make(self.environment_name)
 
 		#Variables to store the total number of episodes, discount factor (gamma),
-		#batch size, epsilon, epsilon minimum value, epsilon decay value, and learning rate
+		#batch size, epsilon, epsilon decay value, and learning rate
 		self.episodes = None
-		self.gamma = None
-		self.batch_size = None
-		self.epsilon = None
-		self.learning_rate = None
+		self.gamma = 0.99
+		self.batch_size = 32
+		self.epsilon = 1
+		self.epsilon_decay = None
+		self.learning_rate = 0.001
 		#For the Mountain-Car environment
 		if(self.environment_name == "MountainCar-v0"):
 			self.episodes = 3001
-			self.gamma = 0.99
-			self.batch_size = 32
-			self.epsilon = 1
-			self.epsilon_min = 0.01
-			self.epsilon_decay = (self.epsilon-self.epsilon_min)/2000
-			self.learning_rate = 0.001
+			self.epsilon_decay = (self.epsilon-0.01)/2000
 		#For the CartPole Environment
 		else:
 			self.episodes = 5001
-			self.gamma = 0.99
-			self.batch_size = 32
-			self.epsilon = 1
-			self.epsilon_min = 0.01
-			self.epsilon_decay = (self.epsilon-self.epsilon_min)/self.episodes
-			self.learning_rate = 0.001
+			self.epsilon_decay = (self.epsilon-0.01)/self.episodes
 
 		#Variables to use for plotting while training
 		self.train_episodes_per_test = 100
@@ -247,7 +237,7 @@ class DQN_Agent():
 	#Name:          test
 	#Purpose:       test the DQN agent in the environment
 	#Inputs:        none
-	#Outputs:        average_reward -> average cumulative test reward of the DQN agent
+	#Outputs:       average_reward -> average cumulative test reward of the DQN agent
 	#				average_td_error -> average td-error of the DQN agent
 	def test(self):
 		#Variables to store the outputs of policy progression through the environment
@@ -310,10 +300,10 @@ class DQN_Agent():
 					state = self.env.reset()
 					done = False
 					while(done == False):
-						#Get the q-values using our policy and get an action
+						#Get the q-values using our policy, get an action using greedy, and take the action moving to a next state, getting a reward,
+						#and determining if the environment has terminated
 						q_values = self.DQN_Model.model.predict(np.array([state]), batch_size=1)
 						action = self.greedy_policy(q_values)
-						#Take our action to move to a next state, get a reward, and determine if our environment has terminated
 						next_state, reward, done, _ = self.env.step(action[0])
 						#Add the current reward to the data structure storing the rewards
 						all_rewards[i] += reward
@@ -358,10 +348,10 @@ class DQN_Agent():
 				state = self.env.reset()
 				done = False
 
-			#Get the q-values using our policy and get an action
+			#Get the q-values using our policy, get an action, and take the action moving to a next state, getting a
+			#reward, and determining if the environment has terminated
 			q_values = self.DQN_Model.model.predict(np.array([state]), batch_size=1)
 			action = self.epsilon_greedy_policy(q_values)
-			#Take our action to move to a next state, get a reward, and determine if our environment has terminated
 			next_state, reward, done, _ = self.env.step(action[0])
 			#Set the termination variable as it will be helpful for calculating y_j
 			if(done == False):
