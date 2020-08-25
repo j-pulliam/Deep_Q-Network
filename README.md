@@ -1,4 +1,4 @@
-# Deep_Q-Network
+# Deep Q-Network
 In this project we build and train a [Deep Q-Network](https://arxiv.org/abs/1312.5602) for both the [CartPole-v0](https://gym.openai.com/envs/CartPole-v0/) and [MountainCar-v0](https://gym.openai.com/envs/MountainCar-v0/) environments in [OpenAI Gym](https://gym.openai.com/). These type of networks were introduced in the ground-breaking paper ["Playing Atari with Deep Reinforcement Learning"](https://arxiv.org/abs/1312.5602) published by [DeepMind](https://deepmind.com/) in 2013. The key idea is to use a neural network as the replacement for the Q-Table alleviating the scaling problem that occurs in environments with larger state / action spaces.
 
 <img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/DQN.jpg">
@@ -23,7 +23,13 @@ python main.py --env CartPole-v0
 ```
 
 ## CartPole Results
+The run time for this environment should be about 30 minutes depending on system setup and hardware. The average cumulative test reward per training episode can be seen as follows:
 
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_Reward.jpg">
+
+Likewise the average TD Error per training episode is:
+
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_TD_Error.jpg">
 
 ## Training DQN for MountainCar
 To train a Deep Q-Network for the MountainCar environment please execute the following command:
@@ -32,3 +38,10 @@ python main.py --env MountainCar-v0
 ```
 
 ## MountainCar Results
+The run time for this environment should be about 50 minutes depending on system setup and hardware. The average cumulative test reward per training episode can be seen as follows:
+
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_Reward.jpg">
+
+Likewise the average TD Error per training episode is:
+
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_TD_Error.jpg">

@@ -50,7 +50,7 @@ class DQN_Agent():
 		self.test_episodes = 50
 
 		#Variables to use for the number of video captures
-		self.total_videos = 4-1
+		self.total_videos = 10-1
 		self.video_interval = int(self.episodes / self.total_videos)
 
 		#Size of the replay buffer and burn in value
@@ -172,7 +172,7 @@ class DQN_Agent():
 
 			#Capture a video of the agent in the environment at a specific time as it learns
 			if(i % self.video_interval == 0):
-				self.test_video(i)
+				self.test_video()
 
 		#Get the total training time
 		end_time = time.time()
@@ -182,19 +182,12 @@ class DQN_Agent():
 		return
 
 	#Name:          test_video
-	#Purpose:       save videos of the agent acting in the environment
-	#Inputs:        epi -> episode number on
-	#Output:        none -> just saves a video of the agent acting in the environment
-	def test_video(self, epi):
-		#Create a new environment and a save path
+	#Purpose:       display videos of the agent acting in the environment
+	#Inputs:        none
+	#Output:        none -> just displays a video of the agent acting in the environment
+	def test_video(self):
+		#Create a new environment
 		new_environment = gym.make(self.environment_name)
-		save_path = "./videos-%s-%s" % (self.environment_name, epi)
-		if not os.path.exists(save_path):
-			os.mkdir(save_path)
-
-		#Create a video of the agent acting in the environment
-		env = gym.wrappers.Monitor(new_environment, save_path, force=True)
-		reward_total = []
 		state = new_environment.reset()
 
 		#Act in the environment until a terminal state is reached
@@ -205,8 +198,7 @@ class DQN_Agent():
 			action = self.greedy_policy(q_values)
 			next_state, reward, done, info = new_environment.step(action[0])
 			state = next_state
-			reward_total.append(reward)
-		env.close()
+			time.sleep(0.05)
 		new_environment.close()
 		return
 
