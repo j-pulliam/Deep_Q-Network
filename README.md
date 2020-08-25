@@ -25,11 +25,11 @@ python main.py --env CartPole-v0
 ## CartPole Results
 The run time for this environment should be about 30 minutes depending on system setup and hardware. The average cumulative test reward per training episode can be seen as follows:
 
-<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_Reward.jpg">
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_Reward.png">
 
 Likewise the average TD Error per training episode is:
 
-<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_TD_Error.jpg">
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/CartPole_TD_Error.png">
 
 ## Training DQN for MountainCar
 To train a Deep Q-Network for the MountainCar environment please execute the following command:
@@ -40,8 +40,8 @@ python main.py --env MountainCar-v0
 ## MountainCar Results
 The run time for this environment should be about 50 minutes depending on system setup and hardware. The average cumulative test reward per training episode can be seen as follows:
 
-<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_Reward.jpg">
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_Reward.png">
 
 Likewise the average TD Error per training episode is:
 
-<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_TD_Error.jpg">
+<img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/MountainCar_TD_Error.png">
