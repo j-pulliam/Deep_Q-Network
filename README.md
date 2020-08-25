@@ -2,6 +2,7 @@
 In this project we build and train a [Deep Q-Network](https://arxiv.org/abs/1312.5602) for both the [CartPole-v0](https://gym.openai.com/envs/CartPole-v0/) and [MountainCar-v0](https://gym.openai.com/envs/MountainCar-v0/) environments in [OpenAI Gym](https://gym.openai.com/). These type of networks were introduced in the ground-breaking paper ["Playing Atari with Deep Reinforcement Learning"](https://arxiv.org/abs/1312.5602) published by [DeepMind](https://deepmind.com/) in 2013. The key idea is to use a neural network as the replacement for the Q-Table alleviating the scaling problem that occurs in environments with larger state / action spaces.
 
 <img src="https://github.com/j-pulliam/Deep_Q-Network/blob/master/img/DQN.jpg">
+
 [Source](https://rubikscode.net/2019/07/08/deep-q-learning-with-python-and-tensorflow-2-0/)
 
 Using the default hyper-parameters and running the code "as-is" should lead directly to convergence for both environments. Feel free to modify the code and experiment with other extensions to the DQN model such as [Double DQN](https://arxiv.org/abs/1509.06461), [Dueling DQN](https://arxiv.org/abs/1511.06581), [Prioritized Experience Replay](https://arxiv.org/abs/1511.05952), etc.    
